@@ -1,0 +1,619 @@
+---
+lang: "pt-br"
+output:
+  pdf_document:
+    extra_dependencies: ["float", "pdfpages"]
+    latex_engine: xelatex
+    keep_tex: true
+  word_document: default
+header-includes:
+- \usepackage{cancel}
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhf{}
+- \renewcommand{\headrulewidth}{0pt}
+- \fancyfoot[L]{\includegraphics[width=2cm]{logo.png}}
+- \fancyfoot[C]{}
+- \fancyfoot[R]{Página \thepage}
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+```{=tex}
+\begin{titlepage}
+\centering
+\includegraphics[width=3cm]{logo.png}
+\vfill
+{\Huge Teoria do Aprendizado Estatístico\par}
+{\huge Avaliação 1\par}
+\vspace{1cm}
+{\Large Luiz Henrique Barretta Francisco - 202100155302 \par}
+\vfill
+{\large maio/2025 \par}
+\end{titlepage}
+```
+
+**Exercício 1 (ML):** Diferencie os seguintes termos e utilize um exemplo:
+
+a. Função de perda e erro;
+
+b. Validação e data spliting;
+
+c. Overfitting e Complexidade;
+
+d. Risco e Risco empírico;
+
+e. Limite de generalização e coef. de shattering.
+
+\includepdf[pages=-]{ex1.pdf}
+
+**Exercício 2:** Escolha dois métodos de aprendizado de máquina diferentes de Reg. Logística e KNN. Pesquise sobre o coef. de shattering de cada um. Crie um texto explicativo sobre sua pesquisa e vincule com o que foi visto na disciplina.
+
+
+**Redes Neurais:** A capacidade de aprendizado de uma rede neural, e também seu coeficiente de shattering, dependem diretamente da sua arquitetura: o número de camadas, a quantidade de nós por camada e as funções de ativação utilizadas. Para uma rede neral mais simples, definida com $W$ pesos (parâmetros), $U$ unidade de computação (também chamadas de neurônios ou nós), $L$ camadas e com uma função de ativação não polinomial, como a _ReLU_ (Rectified Linear Unit), definida por $reLU(x) = max(0,x)$, foi provado por Bartlett _et al._ (2019) a existência dos seguintes limites para a dimensão _Vapnik-Chervonenkis_ (VC), denotada como $VCdim(F)$: 
+
+* **Limite Superior:**
+    $$VCdim = O(WL \log W)$$
+
+* **Limite Inferior:**
+    $$VCdim = \Omega(WL \log \frac{W}{L})$$
+    
+Utilizando o limite superior acima, podemos inferir que o coeficiente de _shattering_ para a rede neural _ReLU_ satisfaz:
+$$\mathcal{M}(F, n) \leq (n+1)^{c \cdot WL \log W}$$
+onde $c$ é uma constante implícita na notação $O(\cdot)$.
+
+
+Isso demonstra que a riqueza da classe de funções da rede, e portanto sua capacidade de classificar conjuntos de dados de diversas maneiras, cresce de acordo com $n$, e sendo a sua taxa de crescimento governada exponencialmente pela dimensão VC, a qual, por sua vez, está ligada às características de $W$ pesos e $L$ camadas da rede. É importante notar que no artigo referenciado, limites mais estreitos ou largos para a dimensão VC também foram definidos e podem ser obtidos ao se especificar com mais detalhes as características da rede neural. No caso apresentado, utilizou-se um modelo de rede neural mais simplificado.
+
+Bartlett, P. L., Harvey, N., Liaw, C., & Mehrabian, A. (2019). \textit{Nearly-tight VC-dimension bounds for piecewise linear neural networks}. \textit{Journal of Machine Learning Research, 20}(63), 1–17. Disponível em: \href{https://jmlr.org/papers/volume20/17-612/17-612.pdf}{https://jmlr.org/papers/volume20/17-612/17-612.pdf}
+
+
+**Árvores de Decisão:** A capacidade de generalização de uma árvore de decisão, e também sua complexidade combinatória, podem ser caracterizadas pela dimensão VC. Essa dimensão depende da estrutura da árvore: o número de folhas $L_T$, o número de atributos reais $l$ utilizados e o tipo das regras de decisão.
+
+Recentemente, Leboeuf *et al.* (2022) apresentaram resultados para a dimensão VC em árvores de decisão binárias que realizam divisões nos eixos em atributos reais. Os autores mostraram que, para uma árvore de $L_T$ folhas e $l$ atributos reais, a dimensão VC da classe de funções correspondente é assintoticamente limitada por:
+
+* **Limite Superior:**
+
+$$VCdim = O(L_T \log(L_T \cdot l))$$
+
+Esse resultado foi obtido por meio de um modelo recursivo baseado em funções de particionamento, assim generalizando o comportamento para árvores arbitrárias. Utilizando um resultado clássico de Mansour (1997), sabe-se que existe um limite inferior para a dimensão VC em função do número de nós internos $N$, onde $L_T = N + 1$:
+
+* **Limite Inferior:**
+$$VCdim = \Omega(L_T)$$
+
+Portanto, a dimensão VC cresce ao menos linearmente com o número de folhas e, no pior caso, até proporcionalmente a $L_T \log(L_T l)$.
+
+
+A partir do Lema de Sauer-Shelah, podemos inferir um limite superior para o coeficiente de _shattering_, que representa o número máximo de rotulações distintas que a classe $F$ pode implementar sobre $n$ exemplos:
+
+$$\mathcal{M}(F, n) \leq (n+1)^{c \cdot L_T \log(L_T \cdot l)}$$
+
+onde $c$ é uma constante implícita de $O(\cdot)$.
+
+Esse crescimento exponencial do coeficiente de _shattering_ em relação ao número de $n$ evidencia a complexidade da classe de funções representada pela árvore de decisão. Tal crescimento é controlado pela dimensão VC, que por sua vez é governada pela profundidade estrutural da árvore e pela complexidade das regras de divisão utilizadas.
+
+
+Leboeuf, J.-S., LeBlanc, F., & Marchand, M. (2022). *Generalization Properties of Decision Trees on Real-valued and Categorical Features*. Journal of Machine Learning Research, 1–81. Disponível em: [https://arxiv.org/pdf/2210.10781](https://arxiv.org/pdf/2210.10781)
+
+Mansour, Y. (1997). *Pessimistic Decision Tree Pruning Based on Tree Size*. Fourteenth International Conference on Machine Learning (pp. 195–201). Morgan Kaufmann. Disponível em: [https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=b6fce37612db10a9756b904b5e79e1144ca12574](https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=b6fce37612db10a9756b904b5e79e1144ca12574)
+
+**Exercício 3 (ML):** Leia artigo RAPER, Simon. Leo Breiman’s “two cultures”. Significance, v. 17, n. 1, p. 34-37, 2020. Acesso em: (https://rss.onlinelibrary.wiley.com/doi/epdf/10.1111/j.1740-9713.2020.01357.x). Argumente relacionando o artigo com os conteúdos de aprendizado de máquina vistos na disciplina.
+
+\includepdf[pages=-]{ex3.pdf}
+
+**Exercício 4:** Pesquise duas métricas de capacidade preditiva não vistas em sala de aula para o contexto de classificação. Utilize os dados banknote (https://archive.ics.uci.edu/dataset/267/banknote+authentication (https://archive.ics.uci.edu/dataset/267/banknote+authentication)) e o classificador KNN.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(readr)
+library(caret)
+library(class)
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+
+col_names <- c("variance", "skewness", "curtosis", "entropy", "class")
+banknote_data <- read_csv("data_banknote_authentication.txt",
+                          col_names = col_names, col_types = cols())
+
+banknote_data$class <- as.factor(banknote_data$class)
+levels(banknote_data$class) <- make.names(levels(banknote_data$class)) 
+
+set.seed(123)
+# Data Splitting (75%) e teste (25%)
+trainIndex <- createDataPartition(banknote_data$class, p = 0.75, list = FALSE, times = 1)
+train_data <- banknote_data[trainIndex, ]
+test_data <- banknote_data[-trainIndex, ]
+
+train_features <- train_data[, -5]
+train_labels <- train_data$class
+test_features <- test_data[, -5]
+test_labels <- test_data$class
+
+# Normalização
+preProcValues <- preProcess(train_features, method = c("center", "scale"))
+train_features_scaled <- predict(preProcValues, train_features)
+test_features_scaled <- predict(preProcValues, test_features)
+
+# KNN
+k_val <- floor(sqrt(nrow(train_data)))
+if (k_val %% 2 == 0) k_val <- k_val + 1
+knn_pred <- knn(train = train_features_scaled, test = test_features_scaled,
+                cl = train_labels, k = k_val)
+pos_class <- make.names("1")
+
+plot_data_dist <- as.data.frame(test_features_scaled)
+plot_data_dist$predicted_class <- knn_pred 
+pred_colors <- c("X0" = "skyblue", "X1" = "salmon") 
+
+p_variance <- ggplot(plot_data_dist, aes(x = variance, fill = predicted_class)) +
+  geom_density(alpha = 0.7) + scale_fill_manual(values = pred_colors, name = "Predição") +
+  labs(x = "Variância (escalonada)", y = "Densidade") +
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5, size = 10),
+                          legend.position = "none")
+
+p_skewness <- ggplot(plot_data_dist, aes(x = skewness, fill = predicted_class)) +
+  geom_density(alpha = 0.7) + scale_fill_manual(values = pred_colors, name = "Predição") +
+  labs(x = "Assimetria (escalonada)",y = "Densidade") +
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5, size = 10),
+                          legend.position = "none")
+
+p_curtosis <- ggplot(plot_data_dist, aes(x = curtosis, fill = predicted_class)) +
+  geom_density(alpha = 0.7) + scale_fill_manual(values = pred_colors, name = "Predição") +
+  labs(x = "Curtose (escalonada)", y = "Densidade") +
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5, size = 10),
+                          legend.position = "none")
+
+p_entropy <- ggplot(plot_data_dist, aes(x = entropy, fill = predicted_class)) +
+  geom_density(alpha = 0.7) + scale_fill_manual(values = pred_colors, name = "Predição") +
+  labs(x = "Entropia (escalonada)", y = "Densidade") +
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5, size = 10))
+
+combined_dist_plot <- (p_variance | p_skewness) / (p_curtosis | p_entropy) +
+  plot_layout(guides = 'collect') +
+  plot_annotation(
+    title = paste("Distribuições Marginais das Features - KNN (k =", k_val, ")"),
+    theme = theme(plot.title = element_text(hjust = 0.5, size = 16, face="bold")))
+print(combined_dist_plot)
+```
+
+O gráfico acima apresenta as distribuições de densidade marginal para cada uma das quatro variáveis preditoras do conjunto de dados (variância, assimetria, curtose e entropia), condicionadas às classes ("X0" e "X1") preditas pelo modelo KNN no conjunto de teste. Ajustou-se um KNN com k=33, um conjunto de treinamento correspondente a 75% das observações e com normalização das variáveis.
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE}
+cm <- confusionMatrix(data = knn_pred, reference = test_labels, positive = pos_class)
+cm_table <- as.data.frame(cm$table)
+names(cm_table) <- c("Prediction", "Reference", "Frequency")
+plot_title <- paste("Matriz de Confusão - KNN (k =", k_val, ")")
+
+confusion_plot <- ggplot(data = cm_table, aes(x = Reference, y = Prediction, fill = Frequency)) +
+  geom_tile(colour = "white") + geom_text(aes(label = sprintf("%d", Frequency)), vjust = 1, size = 5) +
+  scale_fill_gradient(low = "lightblue", high = "steelblue") +
+  labs(x = "Classe Real (Reference)", y = "Classe Predita (Prediction)",
+       title = plot_title, fill = "Frequência") +
+  coord_equal() + theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+        axis.title = element_text(size = 14), axis.text = element_text(size = 12),
+        legend.title = element_text(size = 12), legend.text = element_text(size = 10),
+        axis.text.y = element_text(angle = 0, hjust = 1),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  scale_x_discrete(limits = sort(levels(cm_table$Reference))) +
+  scale_y_discrete(limits = rev(sort(levels(cm_table$Prediction))))
+print(confusion_plot)
+```
+
+Este gráfico exibe a matriz de confusão aplicada no modelo KNN ajustado. Os valores obtidos de Verdadeiros Negativos (TN), Verdadeiros Positivos (TP), Falsos Negativos (FN) e Falsos Positivos (FP), visualizados nesta matriz, servirão de base para o cálculo das duas novas métricas de capacidade preditiva (Coeficiente Kappa de Cohen e Razão de Chances Diagnóstica - DOR) que serão exploradas em seguida:
+
+O Coeficiente Kappa de Cohen é calculado pela fórmula:
+$$\kappa = \frac{P_o - P_e}{1 - P_e}$$
+onde: $P_o$ é a concordância observada, proporção de acertos ou acurácia:
+$$P_o = \frac{TP + TN}{N}$$
+sendo $N = TP + TN + FP + FN$, o número total de observações.
+
+$P_e$ é a concordância esperada por acaso. Para um problema de classificação binária como é o caso, é calculada como a soma da probabilidade de ambos (modelo e real) classificarem como positivo por acaso e a probabilidade de ambos classificarem como negativo por acaso:
+$$P_e = P_{\text{positivos por acaso}} + P_{\text{negativos por acaso}}$$
+$$P_e = \left( \frac{TP + FP}{N} \times \frac{TP + FN}{N} \right) + \left( \frac{FN + TN}{N} \times \frac{FP + TN}{N} \right)$$
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE}
+TP <- cm$table[pos_class, pos_class]
+TN <- cm$table[levels(test_labels)[levels(test_labels) != pos_class],
+               levels(test_labels)[levels(test_labels) != pos_class]]
+FP <- cm$table[pos_class, levels(test_labels)[levels(test_labels) != pos_class]] 
+FN <- cm$table[levels(test_labels)[levels(test_labels) != pos_class], pos_class] 
+cat("TP:", TP, " TN:", TN, " FP:", FP, " FN:", FN, "\n")
+cohen_kappa <- cm$overall["Kappa"]
+cat("Coeficiente Kappa de Cohen:", round(cohen_kappa, 4), "\n")
+```
+
+O Coeficiente Kappa de Cohen obtido para o modelo KNN foi de 0.9882. Esta métrica avalia a concordância entre as classes preditas pelo modelo e as classes reais, levando em consideração a concordância que poderia ocorrer puramente ao acaso. Um valor de Kappa como o observado, bem superior a 0.8, indica um acordo quase perfeito entre as predições do modelo e os valores verdadeiros, sugerindo que o classificador possui um desempenho excelente e consistente além da simples sorte.
+
+A Razão de Chances de Diagnóstico é calculada como a razão entre as chances de um teste (no nosso caso, a predição do modelo) ser positivo em um indivíduo que realmente tem a condição (classe positiva) e as chances de um teste ser positivo em um indivíduo que não tem a condição (classe negativa). A fórmula é:
+
+$$\text{DOR} = \frac{\frac{TP}{FN}}{\frac{FP}{TN}}$$
+
+Simplificando, obtemos:
+
+$$\text{DOR} = \frac{TP \times TN}{FP \times FN}$$
+
+É importante notar que, se $FP$ ou $FN$ (ou ambos) forem zero, a DOR pode se tornar indefinida ou infinita. Nesses casos, uma prática comum é adicionar uma pequena constante (como $0.5$) a todas as células da matriz de confusão antes de se calcular para obter um valor finito e estável.
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE}
+TP_adj <- TP + 0.5
+TN_adj <- TN + 0.5
+FP_adj <- FP + 0.5
+FN_adj <- FN + 0.5
+dor <- (TP_adj * TN_adj) / (FP_adj * FN_adj)
+
+cat("Razão de Chances de Diagnóstico (DOR):", round(dor, 4), "\n")
+```
+
+A Razão de Chances de Diagnóstico calculada para o modelo, resultou em um valor extraordinariamente alto de 22997. A DOR quantifica o poder discriminatório do modelo, indicando o quão mais provável é uma predição correta de uma classe em relação a uma incorreta, comparando as chances de acerto para as duas classes. Um valor tão elevado (muito acima de 100) sugere uma capacidade discriminatória excepcional do modelo KNN em distinguir entre as notas verdadeiras e falsificadas, especialmente porque o número de Falsos Negativos (FN) foi zero, o que impulsionou significativamente esta métrica.
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE}
+cat("Acurácia:", round(cm$overall["Accuracy"], 4))
+cat("Sensibilidade (Recall para classe 'X1'):", round(cm$byClass["Sensitivity"], 4))
+cat("Especificidade:", round(cm$byClass["Specificity"], 4))
+cat("Precisão (VPP para classe 'X1'):", round(cm$byClass["Pos Pred Value"], 4))
+cat("F1-Score para classe 'X1'):", round(cm$byClass["F1"], 4))
+```
+
+Acima temos outras métricas de desempenho preditivas que corroboram com o bom ajuste oferecido por esse modelo.
+
+**Exercício 5:** Escolha um conjunto de dados para classificação multiclasse (diferente do wallrobot-navigation) e qualquer classificador de seu interesse. Aplique os métodos de validação holdout, holdout repetido, k-fold, k-fold repetido e leave-one-out. Compare os resultados.
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE}
+library(mlbench)
+data(Vehicle, package = "mlbench")
+vehicle_data <- Vehicle
+levels(vehicle_data$Class) <- make.names(levels(vehicle_data$Class))
+
+df_metrics <- list()
+metrics <- c("Accuracy", "Kappa", "Mean_Sensitivity", "Mean_Specificity", "Mean_Pos_Pred_Value",
+              "Mean_Neg_Pred_Value", "Mean_Balanced_Accuracy", "Mean_F1")
+
+train_index_holdout <- createDataPartition(vehicle_data$Class, p = 0.75, list = FALSE, times = 1)
+train_data_holdout <- vehicle_data[train_index_holdout, ]
+test_data_holdout <- vehicle_data[-train_index_holdout, ]
+target_col_name <- "Class"
+predictor_names <- setdiff(names(vehicle_data), target_col_name)
+train_features_holdout <- train_data_holdout[, predictor_names]
+train_labels_holdout <- train_data_holdout[[target_col_name]]
+test_features_holdout <- test_data_holdout[, predictor_names]
+test_labels_holdout <- test_data_holdout[[target_col_name]]
+
+# Normalização
+preproc_holdout <- preProcess(train_features_holdout, method = c("center", "scale"))
+train_features_holdout_scaled <- predict(preproc_holdout, train_features_holdout)
+test_features_holdout_scaled <- predict(preproc_holdout, test_features_holdout)
+
+# Holdout
+k_holdout <- floor(sqrt(nrow(train_features_holdout_scaled)))
+if (k_holdout %% 2 == 0) k_holdout <- k_holdout + 1
+
+predictions_holdout <- knn(train = train_features_holdout_scaled, test = test_features_holdout_scaled,
+                           cl = train_labels_holdout, k = k_holdout)
+
+# Calcular Métricas
+cm_holdout <- confusionMatrix(data = predictions_holdout, reference = test_labels_holdout)
+holdout_metrics_vector <- c(
+  cm_holdout$overall[c("Accuracy", "Kappa")],
+  Mean_Sensitivity = mean(cm_holdout$byClass[, "Sensitivity"], na.rm = TRUE),
+  Mean_Specificity = mean(cm_holdout$byClass[, "Specificity"], na.rm = TRUE),
+  Mean_Pos_Pred_Value = mean(cm_holdout$byClass[, "Pos Pred Value"], na.rm = TRUE),
+  Mean_Neg_Pred_Value = mean(cm_holdout$byClass[, "Neg Pred Value"], na.rm = TRUE),
+  Mean_Balanced_Accuracy = mean(cm_holdout$byClass[, "Balanced Accuracy"], na.rm = TRUE),
+  Mean_F1 = mean(cm_holdout$byClass[, "F1"], na.rm = TRUE)
+)
+names(holdout_metrics_vector) <- metrics 
+df_metrics[["Holdout"]] <- as.data.frame(t(holdout_metrics_vector))
+
+
+common_train_control_args <- list(summaryFunction = multiClassSummary, classProbs = FALSE, 
+                                  savePredictions = "none", allowParallel = FALSE) 
+
+# Holdout Repetido (10x 75/25)
+tc_repeated_holdout <- do.call(trainControl, c(list(method = "LGOCV", p = 0.75,
+                                                    number = 10),common_train_control_args))
+train_knn_lgocv <- train(Class ~ ., data = vehicle_data, method = "knn",
+                         trControl = tc_repeated_holdout, preProcess = c("center", "scale"),
+                         tuneLength = 3)
+best_k_lgocv <- train_knn_lgocv$bestTune$k
+lgocv_results <- train_knn_lgocv$results[train_knn_lgocv$results$k == best_k_lgocv,
+                                         metrics, drop = FALSE]
+df_metrics[["RepeatedHoldout"]] <- lgocv_results
+
+# k-Fold (k=10)
+tc_kfold <- do.call(trainControl, c(list(method = "cv", number = 10), common_train_control_args))
+train_knn_kfold <- train(Class ~ ., data = vehicle_data, method = "knn",
+                         trControl = tc_kfold, preProcess = c("center", "scale"),
+                         tuneLength = 3)
+best_k_kfold <- train_knn_kfold$bestTune$k
+kfold_results <- train_knn_kfold$results[train_knn_kfold$results$k == best_k_kfold,
+                                         metrics, drop = FALSE]
+df_metrics[["KFold"]] <- kfold_results
+
+# k-Fold Repetido (10-fold, 3 repetições)
+tc_rkf <- do.call(trainControl, c(list(method = "repeatedcv", number = 10, repeats = 3),
+                                  common_train_control_args))
+train_knn_rkf <- train(Class ~ ., data = vehicle_data, method = "knn", trControl = tc_rkf,
+                       preProcess = c("center", "scale"), tuneLength = 3)
+best_k_rkf <- train_knn_rkf$bestTune$k
+rep_kfold_res <- train_knn_rkf$results[train_knn_rkf$results$k == best_k_rkf, metrics, drop = FALSE]
+df_metrics[["RepeatedKFold"]] <- rep_kfold_res
+
+# LOOCV 
+tc_loocv <- do.call(trainControl, c(list(method = "LOOCV"), common_train_control_args))
+train_knn_loocv <- train(Class ~ ., data = vehicle_data, method = "knn", trControl = tc_loocv,
+                         preProcess = c("center", "scale"), tuneLength = 3)
+best_k_loocv <- train_knn_loocv$bestTune$k
+loocv_results <- train_knn_loocv$results[train_knn_loocv$results$k == best_k_loocv,
+                                         metrics, drop = FALSE]
+df_metrics[["LOOCV"]] <- loocv_results
+
+final_results_list_dfs <- lapply(names(df_metrics), function(method_name) {
+  df_row <- df_metrics[[method_name]]
+  df_row_with_method <- data.frame(Method = method_name)
+  for(col_name in names(df_row)) {
+    df_row_with_method[[col_name]] <- df_row[[col_name]]}
+  df_row_with_method <- df_row_with_method[, c("Method", metrics)]
+  return(df_row_with_method)})
+
+results_df <- do.call(rbind, final_results_list_dfs)
+rownames(results_df) <- NULL 
+numeric_cols_final <- setdiff(names(results_df), "Method") 
+results_df[numeric_cols_final] <- lapply(results_df[numeric_cols_final],
+                                         function(x) if(is.numeric(x)) round(x, 4) else x)
+novos_nomes_colunas <- c("Método", "Accuracy", "Kappa", "Sens.M", "Espec.M",
+                         "PPV.M", "NPV.M", "AcurBal.M", "F1.M")
+colnames(results_df) <- novos_nomes_colunas
+library(knitr)
+kable(results_df,  caption = "Comparação das Métricas de Desempenho do KNN por Método de Validação", 
+      booktabs = TRUE,  digits = 4, align = 'c')
+```
+
+A tabela acima mostra os resultados do classificador KNN no dataset 'Vehicle', o qual é utilizado para classificar veículos em quatro categorias distintas com base em 18 características numéricas dos carros. Os métodos de reamostragem como tendem a fornecer estimativas das métricas de desempenho mais estáveis e confiáveis que o Holdout simples, cuja estimativa é mais sensível à divisão particular daqueles dados. A consistência nos resultados entre os métodos de reamostragem mais robustos, incluindo o LOOCV, sugere uma avaliação de desempenho mais fidedigna. Para datasets multiclasse como o 'Vehicle', métricas como Acurácia Balanceada Média e F1 Médio são particularmente importantes para entender a generalização do modelo entre as diferentes classes, que podem ser desbalanceadas.
+
+Considerando um equilíbrio entre a confiabilidade da estimativa de desempenho, a variância dessa estimativa e o custo computacional, o método de k-Fold Repetido (no exemplo, um _10-Fold_ repetido 3 vezes) se destaca como a melhor escolha para uma avaliação robusta. Ele melhora a estabilidade de um único k-Fold ao mitigar os efeitos de uma partição específica e é, na maioria das vezes, mais prático computacionalmente que o LOOCV em datasets maiores, embora o LOOCV ofereça uma estimativa com baixo viés.
+
+
+**Exercício 6 (ML):** Considere $n=3$ observações $Y={0,1}$ e $\mathcal{X} = \mathbb{R}$ , seja $G = \{I_{[a,b)}(x) \mid a < b \in \mathbb{R}\}$. $I_A(x) = 1 \text{ se } x \in A \text{ e } 0 \text{ c.c..}$ Calcule o coeficiente de shattering $\mathcal{M}(G, n)$.
+
+\includepdf[pages=-]{ex6.pdf}
+
+**Exercício 7 (ML):** Mostre matematicamente que o princípio de minimização do risco empírico não é consistente para o coef. de shattering com crescimento exponencial. Interprete o resultado.
+
+\includepdf[pages=-]{ex7.pdf}
+
+**Exercício 8 (ML):** Justifique a utilização de métodos de classificação binária com base na Teoria do Aprendizado Estatístico.
+
+\includepdf[pages=-]{ex8.pdf}
+
+## Códigos
+
+```{r echo=TRUE, message=FALSE, warning=FALSE, results='hide', fig.show='hide'}
+#Exercício 4
+library(readr)
+library(caret)
+library(class)
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+
+col_names <- c("variance", "skewness", "curtosis", "entropy", "class")
+banknote_data <- read_csv("data_banknote_authentication.txt",
+                          col_names = col_names, col_types = cols())
+
+banknote_data$class <- as.factor(banknote_data$class)
+levels(banknote_data$class) <- make.names(levels(banknote_data$class)) 
+
+set.seed(123)
+# Data Splitting (75%) e teste (25%)
+trainIndex <- createDataPartition(banknote_data$class, p = 0.75, list = FALSE, times = 1)
+train_data <- banknote_data[trainIndex, ]
+test_data <- banknote_data[-trainIndex, ]
+
+train_features <- train_data[, -5]
+train_labels <- train_data$class
+test_features <- test_data[, -5]
+test_labels <- test_data$class
+
+# Normalização
+preProcValues <- preProcess(train_features, method = c("center", "scale"))
+train_features_scaled <- predict(preProcValues, train_features)
+test_features_scaled <- predict(preProcValues, test_features)
+
+# KNN
+k_val <- floor(sqrt(nrow(train_data)))
+if (k_val %% 2 == 0) k_val <- k_val + 1
+knn_pred <- knn(train = train_features_scaled, test = test_features_scaled,
+                cl = train_labels, k = k_val)
+pos_class <- make.names("1")
+
+plot_data_dist <- as.data.frame(test_features_scaled)
+plot_data_dist$predicted_class <- knn_pred 
+pred_colors <- c("X0" = "skyblue", "X1" = "salmon") 
+
+p_variance <- ggplot(plot_data_dist, aes(x = variance, fill = predicted_class)) +
+  geom_density(alpha = 0.7) + scale_fill_manual(values = pred_colors, name = "Predição") +
+  labs(x = "Variância (escalonada)", y = "Densidade") +
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5, size = 10),
+                          legend.position = "none")
+
+p_skewness <- ggplot(plot_data_dist, aes(x = skewness, fill = predicted_class)) +
+  geom_density(alpha = 0.7) + scale_fill_manual(values = pred_colors, name = "Predição") +
+  labs(x = "Assimetria (escalonada)",y = "Densidade") +
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5, size = 10),
+                          legend.position = "none")
+
+p_curtosis <- ggplot(plot_data_dist, aes(x = curtosis, fill = predicted_class)) +
+  geom_density(alpha = 0.7) + scale_fill_manual(values = pred_colors, name = "Predição") +
+  labs(x = "Curtose (escalonada)", y = "Densidade") +
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5, size = 10),
+                          legend.position = "none")
+
+p_entropy <- ggplot(plot_data_dist, aes(x = entropy, fill = predicted_class)) +
+  geom_density(alpha = 0.7) + scale_fill_manual(values = pred_colors, name = "Predição") +
+  labs(x = "Entropia (escalonada)", y = "Densidade") +
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5, size = 10))
+
+combined_dist_plot <- (p_variance | p_skewness) / (p_curtosis | p_entropy) +
+  plot_layout(guides = 'collect') +
+  plot_annotation(
+    title = paste("Distribuições Marginais das Features - KNN (k =", k_val, ")"),
+    theme = theme(plot.title = element_text(hjust = 0.5, size = 16, face="bold")))
+print(combined_dist_plot)
+
+cm <- confusionMatrix(data = knn_pred, reference = test_labels, positive = pos_class)
+cm_table <- as.data.frame(cm$table)
+names(cm_table) <- c("Prediction", "Reference", "Frequency")
+plot_title <- paste("Matriz de Confusão - KNN (k =", k_val, ")")
+
+
+#Exercício 5
+
+library(mlbench)
+data(Vehicle, package = "mlbench")
+vehicle_data <- Vehicle
+levels(vehicle_data$Class) <- make.names(levels(vehicle_data$Class))
+
+df_metrics <- list()
+metrics <- c("Accuracy", "Kappa", "Mean_Sensitivity", "Mean_Specificity", "Mean_Pos_Pred_Value",
+              "Mean_Neg_Pred_Value", "Mean_Balanced_Accuracy", "Mean_F1")
+
+train_index_holdout <- createDataPartition(vehicle_data$Class, p = 0.75, list = FALSE, times = 1)
+train_data_holdout <- vehicle_data[train_index_holdout, ]
+test_data_holdout <- vehicle_data[-train_index_holdout, ]
+target_col_name <- "Class"
+predictor_names <- setdiff(names(vehicle_data), target_col_name)
+train_features_holdout <- train_data_holdout[, predictor_names]
+train_labels_holdout <- train_data_holdout[[target_col_name]]
+test_features_holdout <- test_data_holdout[, predictor_names]
+test_labels_holdout <- test_data_holdout[[target_col_name]]
+
+# Normalização
+preproc_holdout <- preProcess(train_features_holdout, method = c("center", "scale"))
+train_features_holdout_scaled <- predict(preproc_holdout, train_features_holdout)
+test_features_holdout_scaled <- predict(preproc_holdout, test_features_holdout)
+
+# Holdout
+k_holdout <- floor(sqrt(nrow(train_features_holdout_scaled)))
+if (k_holdout %% 2 == 0) k_holdout <- k_holdout + 1
+
+predictions_holdout <- knn(train = train_features_holdout_scaled, test = test_features_holdout_scaled,
+                           cl = train_labels_holdout, k = k_holdout)
+
+# Calcular Métricas
+cm_holdout <- confusionMatrix(data = predictions_holdout, reference = test_labels_holdout)
+holdout_metrics_vector <- c(
+  cm_holdout$overall[c("Accuracy", "Kappa")],
+  Mean_Sensitivity = mean(cm_holdout$byClass[, "Sensitivity"], na.rm = TRUE),
+  Mean_Specificity = mean(cm_holdout$byClass[, "Specificity"], na.rm = TRUE),
+  Mean_Pos_Pred_Value = mean(cm_holdout$byClass[, "Pos Pred Value"], na.rm = TRUE),
+  Mean_Neg_Pred_Value = mean(cm_holdout$byClass[, "Neg Pred Value"], na.rm = TRUE),
+  Mean_Balanced_Accuracy = mean(cm_holdout$byClass[, "Balanced Accuracy"], na.rm = TRUE),
+  Mean_F1 = mean(cm_holdout$byClass[, "F1"], na.rm = TRUE)
+)
+names(holdout_metrics_vector) <- metrics 
+df_metrics[["Holdout"]] <- as.data.frame(t(holdout_metrics_vector))
+
+
+common_train_control_args <- list(summaryFunction = multiClassSummary, classProbs = FALSE, 
+                                  savePredictions = "none", allowParallel = FALSE) 
+
+# Holdout Repetido (10x 75/25)
+tc_repeated_holdout <- do.call(trainControl, c(list(method = "LGOCV", p = 0.75,
+                                                    number = 10),common_train_control_args))
+train_knn_lgocv <- train(Class ~ ., data = vehicle_data, method = "knn",
+                         trControl = tc_repeated_holdout, preProcess = c("center", "scale"),
+                         tuneLength = 3)
+best_k_lgocv <- train_knn_lgocv$bestTune$k
+lgocv_results <- train_knn_lgocv$results[train_knn_lgocv$results$k == best_k_lgocv,
+                                         metrics, drop = FALSE]
+df_metrics[["RepeatedHoldout"]] <- lgocv_results
+
+# k-Fold (k=10)
+tc_kfold <- do.call(trainControl, c(list(method = "cv", number = 10), common_train_control_args))
+train_knn_kfold <- train(Class ~ ., data = vehicle_data, method = "knn",
+                         trControl = tc_kfold, preProcess = c("center", "scale"),
+                         tuneLength = 3)
+best_k_kfold <- train_knn_kfold$bestTune$k
+kfold_results <- train_knn_kfold$results[train_knn_kfold$results$k == best_k_kfold,
+                                         metrics, drop = FALSE]
+df_metrics[["KFold"]] <- kfold_results
+
+# k-Fold Repetido (10-fold, 3 repetições)
+tc_rkf <- do.call(trainControl, c(list(method = "repeatedcv", number = 10, repeats = 3),
+                                  common_train_control_args))
+train_knn_rkf <- train(Class ~ ., data = vehicle_data, method = "knn", trControl = tc_rkf,
+                       preProcess = c("center", "scale"), tuneLength = 3)
+best_k_rkf <- train_knn_rkf$bestTune$k
+rep_kfold_res <- train_knn_rkf$results[train_knn_rkf$results$k == best_k_rkf, metrics, drop = FALSE]
+df_metrics[["RepeatedKFold"]] <- rep_kfold_res
+
+# LOOCV 
+tc_loocv <- do.call(trainControl, c(list(method = "LOOCV"), common_train_control_args))
+train_knn_loocv <- train(Class ~ ., data = vehicle_data, method = "knn", trControl = tc_loocv,
+                         preProcess = c("center", "scale"), tuneLength = 3)
+best_k_loocv <- train_knn_loocv$bestTune$k
+loocv_results <- train_knn_loocv$results[train_knn_loocv$results$k == best_k_loocv,
+                                         metrics, drop = FALSE]
+df_metrics[["LOOCV"]] <- loocv_results
+
+final_results_list_dfs <- lapply(names(df_metrics), function(method_name) {
+  df_row <- df_metrics[[method_name]]
+  df_row_with_method <- data.frame(Method = method_name)
+  for(col_name in names(df_row)) {
+    df_row_with_method[[col_name]] <- df_row[[col_name]]}
+  df_row_with_method <- df_row_with_method[, c("Method", metrics)]
+  return(df_row_with_method)})
+
+results_df <- do.call(rbind, final_results_list_dfs)
+rownames(results_df) <- NULL 
+numeric_cols_final <- setdiff(names(results_df), "Method") 
+results_df[numeric_cols_final] <- lapply(results_df[numeric_cols_final],
+                                         function(x) if(is.numeric(x)) round(x, 4) else x)
+novos_nomes_colunas <- c("Método", "Accuracy", "Kappa", "Sens.M", "Espec.M",
+                         "PPV.M", "NPV.M", "AcurBal.M", "F1.M")
+colnames(results_df) <- novos_nomes_colunas
+library(knitr)
+kable(results_df,  caption = "Comparação das Métricas de Desempenho do KNN por Método de Validação", 
+      booktabs = TRUE,  digits = 4, align = 'c')
+
+confusion_plot <- ggplot(data = cm_table, aes(x = Reference, y = Prediction, fill = Frequency)) +
+  geom_tile(colour = "white") + geom_text(aes(label = sprintf("%d", Frequency)), vjust = 1, size = 5) +
+  scale_fill_gradient(low = "lightblue", high = "steelblue") +
+  labs(x = "Classe Real (Reference)", y = "Classe Predita (Prediction)",
+       title = plot_title, fill = "Frequência") +
+  coord_equal() + theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+        axis.title = element_text(size = 14), axis.text = element_text(size = 12),
+        legend.title = element_text(size = 12), legend.text = element_text(size = 10),
+        axis.text.y = element_text(angle = 0, hjust = 1),
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  scale_x_discrete(limits = sort(levels(cm_table$Reference))) +
+  scale_y_discrete(limits = rev(sort(levels(cm_table$Prediction))))
+print(confusion_plot)
+
+TP <- cm$table[pos_class, pos_class]
+TN <- cm$table[levels(test_labels)[levels(test_labels) != pos_class],
+               levels(test_labels)[levels(test_labels) != pos_class]]
+FP <- cm$table[pos_class, levels(test_labels)[levels(test_labels) != pos_class]] 
+FN <- cm$table[levels(test_labels)[levels(test_labels) != pos_class], pos_class] 
+cat("TP:", TP, " TN:", TN, " FP:", FP, " FN:", FN, "\n")
+cohen_kappa <- cm$overall["Kappa"]
+cat("Coeficiente Kappa de Cohen:", round(cohen_kappa, 4), "\n")
+
+TP_adj <- TP + 0.5
+TN_adj <- TN + 0.5
+FP_adj <- FP + 0.5
+FN_adj <- FN + 0.5
+dor <- (TP_adj * TN_adj) / (FP_adj * FN_adj)
+
+cat("Razão de Chances de Diagnóstico (DOR):", round(dor, 4), "\n")
+
+cat("Acurácia:", round(cm$overall["Accuracy"], 4))
+cat("Sensibilidade (Recall para classe 'X1'):", round(cm$byClass["Sensitivity"], 4))
+cat("Especificidade:", round(cm$byClass["Specificity"], 4))
+cat("Precisão (VPP para classe 'X1'):", round(cm$byClass["Pos Pred Value"], 4))
+cat("F1-Score para classe 'X1'):", round(cm$byClass["F1"], 4))
+```
+

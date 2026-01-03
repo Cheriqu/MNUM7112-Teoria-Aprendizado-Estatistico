@@ -1,0 +1,256 @@
+---
+lang: "pt-br"
+output:
+  pdf_document:
+    extra_dependencies: float
+    latex_engine: xelatex
+    keep_tex: true
+  word_document: default
+header-includes:
+- \usepackage{cancel}
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhf{}
+- \renewcommand{\headrulewidth}{0pt}
+- \fancyfoot[L]{\includegraphics[width=2cm]{logo.png}}
+- \fancyfoot[C]{}
+- \fancyfoot[R]{Página \thepage}
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+```{=tex}
+\begin{titlepage}
+\centering
+\includegraphics[width=3cm]{logo.png}
+\vfill
+{\Huge Teoria do Aprendizado Estatístico\par}
+{\huge Atividade 3\par}
+\vspace{1cm}
+{\Large Luiz Henrique Barretta Francisco - 202100155302 \par}
+\vfill
+{\large maio/2025 \par}
+\end{titlepage}
+```
+
+\section{Introdução}
+
+Este trabalho tem como objetivo aplicar e comparar dois métodos clássicos de classificação supervisionada — o k-Nearest Neighbors (KNN) e a Regressão Logística — utilizando o conjunto de dados "Robo.csv". O foco será a avaliação do desempenho desses modelos por meio de técnicas de validação cruzada, análise de medidas de desempenho e visualização das fronteiras de decisão. Além disso, serão aplicados métodos de seleção de variáveis com o intuito de melhorar a interpretabilidade e eficiência dos modelos.
+
+\subsection{Análise Descritiva}
+
+Para uma análise inicial das variáveis explicativas, construímos boxplots comparando a distribuição de cada variável contínua em relação à variável resposta \texttt{Class}. A ideia é investigar visualmente se alguma variável apresenta padrões de separação claros entre as classes, o que pode indicar seu potencial preditivo.
+
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE}
+library(tidyverse)
+set.seed(123)
+
+dados <- read.csv("Robo.csv", header = TRUE)
+dados$Class <- as.factor(dados$Class)
+dados$id <- NULL
+dados <- na.omit(dados)
+
+dados_long_1 <- dados %>%
+  pivot_longer(cols = V1:V12, names_to = "Variavel", values_to = "Valor")
+
+ggplot(dados_long_1, aes(x = as.factor(Class), y = Valor, fill = as.factor(Class))) +
+  geom_boxplot(outlier.size = 0.5) +
+  facet_wrap(~ Variavel, scales = "free", ncol = 4) +
+  labs(title = "Boxplots das Variáveis V1 a V12 por Classe",
+       x = "Classe",
+       y = "Valor da Variável") +
+  theme_minimal(base_size = 11) +
+  theme(legend.position = "none",
+        strip.text = element_text(face = "bold", size = 10))
+dados_long_2 <- dados %>%
+  pivot_longer(cols = V13:V24, names_to = "Variavel", values_to = "Valor")
+
+ggplot(dados_long_2, aes(x = as.factor(Class), y = Valor, fill = as.factor(Class))) +
+  geom_boxplot(outlier.size = 0.5) +
+  facet_wrap(~ Variavel, scales = "free", ncol = 4) +
+  labs(title = "Boxplots das Variáveis V13 a V24 por Classe",
+       x = "Classe",
+       y = "Valor da Variável") +
+  theme_minimal(base_size = 11) +
+  theme(legend.position = "none",
+        strip.text = element_text(face = "bold", size = 10))
+
+```
+
+Ao observar os gráficos, identificamos algumas variáveis com distribuições significativamente distintas entre as classes. Entre as variáveis \texttt{V1} a \texttt{V12}, destacam-se \texttt{V6}, \texttt{V7} e \texttt{V8} como aquelas que apresentam maior separação entre os grupos. Já no intervalo de \texttt{V13} a \texttt{V24}, observamos que \texttt{V14}, \texttt{V15} e as variáveis de \texttt{V17} a \texttt{V20} demonstram diferenças expressivas entre as classes. Essas variáveis são fortes candidatas a explicarem a variável resposta e devem ser consideradas com atenção nos modelos de classificação.
+
+
+\section{Metodologia}
+
+Como estratégia inicial, quatro modelos de regressão logística multinomial foram ajustados: (i) com todas as variáveis explicativas; (ii) com todas as variáveis e seus termos quadráticos; (iii) com as variáveis estatisticamente significativas do modelo completo; e (iv) com todas as variáveis, seus termos quadráticos e interações entre variáveis previamente identificadas como mais relevantes. A Tabela a seguir apresenta os valores de AIC, log-verossimilhança e acurácia para os quatro modelos.
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE}
+library(nnet)
+library(broom)
+
+vars <- names(dados)[sapply(dados, is.numeric) & names(dados) != "Class"]
+dados[vars] <- scale(dados[vars])
+modelo1 <- multinom(Class ~ ., data = dados, trace = FALSE)
+
+variaveis <- names(dados)[names(dados) != "Class"]
+termos_quadraticos <- paste0("I(", variaveis, "^2)")
+formula2 <- as.formula(paste("Class ~", paste(c(variaveis, termos_quadraticos), collapse = " + ")))
+modelo2 <- multinom(formula2, data = dados, trace = FALSE)
+
+summary_mod1 <- summary(modelo1)
+z_mod1 <- summary_mod1$coefficients / summary_mod1$standard.errors
+p_values_mod1 <- 2 * (1 - pnorm(abs(z_mod1)))
+signif_vars <- setdiff(colnames(p_values_mod1)[apply(p_values_mod1, 2, function(x) any(x < 0.05))], "(Intercept)")
+formula3 <- as.formula(paste("Class ~", paste(signif_vars, collapse = "+")))
+modelo3 <- multinom(formula3, data = dados, trace = FALSE)
+
+vars_boas <- c("V6", "V7", "V8", "V14", "V15", "V17", "V18", "V19", "V20")
+termos_quadraticos_boas <- paste0("I(", vars, "^2)")
+interacoes <- combn(vars_boas, 2, FUN = function(x) paste0(x[1], ":", x[2]))
+formula4 <- as.formula(paste("Class ~", paste(c(vars, termos_quadraticos_boas, interacoes), collapse = " + ")))
+modelo4 <- multinom(formula4, data = dados, trace = FALSE)
+
+acuracia <- function(modelo) {
+  pred <- predict(modelo, newdata = dados)
+  mean(pred == dados$Class)}
+
+tibble(
+  Modelo = c("Modelo 1: Variáveis originais",
+             "Modelo 2: Termos quadráticos",
+             "Modelo 3: Variáveis significativas",
+             "Modelo 4: Quadráticos + Interações"),
+  AIC = c(AIC(modelo1), AIC(modelo2), AIC(modelo1), AIC(modelo4)),
+  LogLik = c(logLik(modelo1), logLik(modelo2), logLik(modelo1), logLik(modelo4)),
+  Acuracia = c(acuracia(modelo1), acuracia(modelo2), acuracia(modelo1), acuracia(modelo4)))
+
+```
+
+Observa-se que o Modelo 4, que incorpora tanto termos quadráticos quanto interações entre variáveis selecionadas, apresentou o melhor desempenho entre todos os modelos testados, com menor AIC (3107.127), maior log-verossimilhança (-1298.564) e acurácia de 91,6%. Isso indica que a adição controlada de complexidade ao modelo, por meio de interações entre variáveis relevantes, permitiu capturar melhor os padrões da base de dados, superando inclusive o modelo com apenas termos quadráticos. A análise prossegue com base nesse modelo mais robusto.
+
+Além das abordagens baseadas em regressão logística multinomial, também foi testada uma técnica de redução de dimensionalidade baseada na Análise de Componentes Principais (PCA), aplicada sobre os dados padronizados. No entanto, apesar de simplificar o espaço de variáveis, a utilização do PCA resultou em desempenho inferior, tanto em termos de AIC quanto de acurácia, quando comparado aos modelos anteriores. Assim, optou-se por não prosseguir com essa abordagem. Como próximo passo, será ajustado o algoritmo k-Nearest Neighbors (KNN), visando avaliar seu desempenho em comparação com os modelos de regressão.
+
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE}
+library(caret)
+library(ggplot2)
+
+ctrl <- trainControl(method = "cv", number = 10)
+modelo_knn <- train(
+  Class ~ .,
+  data = dados,
+  method = "knn",
+  tuneLength = 10,
+  trControl = ctrl)
+
+modelo_knn$results
+modelo_knn$finalModel
+
+acuracia_knn <- max(modelo_knn$results$Accuracy)
+
+tibble(
+  Modelo = "KNN (CV 10-fold)",
+  Acuracia = acuracia_knn)
+```
+
+O modelo KNN, ajustado com validação cruzada 10-fold, obteve uma acurácia de 86,8%, sendo otimizado com k = 5 vizinhos. Esse desempenho é ligeiramente inferior ao da regressão logística multinomial com termos quadráticos e interações (Modelo 4), que alcançou 91,6% de acurácia, mas ainda assim supera os modelos base com variáveis originais. Isso demonstra que o KNN é competitivo em tarefas de classificação multiclasse, especialmente quando bem ajustado, embora a regressão logística mais complexa tenha capturado melhor os padrões dos dados. Abaixo, temos a fronteira de decisão para cada uma das abordagens.
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, fig.height = 10, fig.width= 10}
+library(gridExtra)
+
+var_x <- "V2"
+var_y <- "V20"
+dados_plot <- dados[, c(var_x, var_y, "Class")]
+
+grid_vals <- expand.grid(
+  x = seq(min(dados[[var_x]]) - 0.5, max(dados[[var_x]]) + 0.5, length.out = 200),
+  y = seq(min(dados[[var_y]]) - 0.5, max(dados[[var_y]]) + 0.5, length.out = 200))
+names(grid_vals) <- c(var_x, var_y)
+
+media_preditores <- colMeans(dados[, vars])
+grid_completo <- cbind(grid_vals, t(replicate(nrow(grid_vals), media_preditores)))
+grid_completo[, c(var_x, var_y)] <- grid_vals[, c(var_x, var_y)]
+grid_vals$Pred_LogReg <- predict(modelo4, newdata = grid_completo)
+grid_vals$Pred_KNN <- predict(modelo_knn, newdata = grid_completo)
+
+
+plot_log <- ggplot() +
+  geom_tile(data = grid_vals, aes_string(x = var_x, y = var_y, fill = "Pred_LogReg"), alpha = 0.3) +
+  geom_point(data = dados_plot, aes_string(x = var_x, y = var_y, color = "Class"), size = 1) +
+  labs(title = "Fronteira de Decisão – Regressão Logística Multinomial",
+       x = var_x, y = var_y) +
+  scale_fill_brewer(palette = "Set1") +
+  scale_color_brewer(palette = "Set1") +
+  theme_minimal()
+
+plot_knn <- ggplot() +
+  geom_tile(data = grid_vals, aes_string(x = var_x, y = var_y, fill = "Pred_KNN"), alpha = 0.3) +
+  geom_point(data = dados_plot, aes_string(x = var_x, y = var_y, color = "Class"), size = 1) +
+  labs(title = "Fronteira de Decisão – KNN",
+       x = var_x, y = var_y) +
+  scale_fill_brewer(palette = "Dark2") +
+  scale_color_brewer(palette = "Dark2") +
+  theme_minimal()
+
+grid.arrange(plot_log, plot_knn, ncol = 1)
+```
+
+A imagem apresenta as fronteiras de decisão dos dois modelos de classificação aplicados: Regressão Logística Multinomial (acima) e KNN (abaixo), com base nas variáveis _V2_ e _V20_. Observa-se que a fronteira gerada pela Regressão Logística é mais suave e tende a ser mais generalista, com regiões amplas associadas a cada classe. Esse comportamento é típico de modelos paramétricos, que assumem uma forma funcional fixa para separar as classes. Já o KNN exibe fronteiras mais irregulares e fragmentadas, adaptando-se fortemente à distribuição dos pontos de treino, o que sugere uma maior sensibilidade à variação local dos dados. No entanto, essa flexibilidade também pode tornar o modelo mais suscetível ao overfitting, especialmente em regiões com maior sobreposição entre classes.
+
+Para garantir uma avaliação robusta dos modelos, foi adotado o método de validação cruzada estratificada do tipo k-fold com $k=10$. Esse procedimento consiste em particionar os dados em 10 subconjuntos aproximadamente iguais, utilizando 9 partes para o treinamento e 1 para o teste, de forma rotativa. A estratificação assegura que a proporção entre as classes seja mantida em cada uma das dobras, tornando a comparação entre os modelos mais justa e confiável. Além da acurácia, foram calculadas outras métricas como o índice Kappa, a média do F1-score, a sensibilidade e a precisão, proporcionando uma visão mais abrangente do desempenho de cada método.
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE}
+library(tibble)
+
+levels(dados$Class) <- make.names(levels(dados$Class))
+ctrl_cv <- trainControl(
+  method = "cv",
+  number = 10,
+  classProbs = TRUE,
+  savePredictions = "final")
+
+modelo4_cv <- train(
+  formula4,
+  data = dados,
+  method = "multinom",
+  trControl = ctrl_cv,
+  trace = FALSE)
+
+modelo_knn_cv <- train(
+  Class ~ .,
+  data = dados,
+  method = "knn",
+  tuneLength = 10,
+  trControl = ctrl_cv)
+
+pred_m4 <- modelo4_cv$pred
+pred_knn <- modelo_knn_cv$pred
+
+pred_m4$obs <- factor(pred_m4$obs, levels = levels(dados$Class))
+pred_m4$pred <- factor(pred_m4$pred, levels = levels(dados$Class))
+pred_knn$obs <- factor(pred_knn$obs, levels = levels(dados$Class))
+pred_knn$pred <- factor(pred_knn$pred, levels = levels(dados$Class))
+conf_m4 <- confusionMatrix(pred_m4$pred, pred_m4$obs)
+conf_knn <- confusionMatrix(pred_knn$pred, pred_knn$obs)
+
+
+tibble(
+  Modelo = c("Regressão Multinomial - Modelo 4", "KNN (melhor k, CV 10-fold)"),
+  Kappa = c(conf_m4$overall["Kappa"], conf_knn$overall["Kappa"]),
+  Accuracy = c(conf_m4$overall["Accuracy"], conf_knn$overall["Accuracy"]),
+  F1_Média = c(mean(conf_m4$byClass[, "F1"]), mean(conf_knn$byClass[, "F1"])),
+  Sensibilidade = c(mean(conf_m4$byClass[, "Sensitivity"]), mean(conf_knn$byClass[, "Sensitivity"])),
+  Precisao = c(mean(conf_m4$byClass[, "Precision"]), mean(conf_knn$byClass[, "Precision"])))
+```
+
+Conclui-se, portanto, que a Regressão Logística Multinomial com termos quadráticos e interações (Modelo 4) apresentou o melhor desempenho geral, tanto em termos de acurácia (90,6%) quanto de estabilidade na classificação, como evidenciado pelas métricas obtidas na validação cruzada. Sua principal vantagem está na capacidade de modelar relações não lineares e interações entre variáveis de forma interpretável e controlada. Por outro lado, sua limitação reside na suposição de linearidade (mesmo com extensões quadráticas) e na necessidade de especificar previamente essas relações. Já o KNN, apesar de mais simples e intuitivo, depende fortemente da densidade dos dados em cada região do espaço, sendo menos robusto em cenários com alta dimensionalidade ou sobreposição de classes.
+
+
+\section{Referências}
+
+Cover, T. M., & Hart, P. E. (1967). *Nearest neighbor pattern classification*. IEEE Transactions on Information Theory, 13(1), 21–27. https://doi.org/10.1109/TIT.1967.1053964
+
+Hosmer, D. W., Lemeshow, S., & Sturdivant, R. X. (2013). *Applied Logistic Regression* (3rd ed.). Wiley. ISBN: 978-0470582473.
+
+
